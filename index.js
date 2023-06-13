@@ -13,15 +13,22 @@ app.get("/", (req, res) => {
 
 const niftyDerivatives = async (req, res) => {
   let { page, browser } = await browserInit(
-    config.NSE_API_URL + "market-data/live-equity-market"
+    config.UPSTOX_API_URL + `indices/nifty-50-share-price/#overview`
   );
 
-  // await page.select("select#equitieStockSelect", "NIFTY 50");
-
-  const niftyDerivative = await page.evaluate(() =>
-    document.querySelector("table")
+  const nifty = await page.evaluate(() =>
+    Array.from(
+      document.querySelectorAll("#table-data-indices .stock-filter-data")
+    ).map((el) => {
+      return {
+        image: el.querySelector(".data-col-1 .company-info figure img").src,
+        name: el.querySelector(".data-col-1 .company-name span a").innerText,
+        curr_price: el.querySelector(".data-col-2 .price-details .price").innerText,
+        change: el.querySelector(".stat-desktop .price-details .percentage").innerText
+      }
+    })
   );
-  console.log(niftyDerivative);
+  console.log(nifty);
 
   await browserStop(browser);
 };

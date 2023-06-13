@@ -6,7 +6,7 @@ export async function browserInit(url) {
   });
   const page = await browser.newPage();
   await page.goto(url);
-
+  
   return {
     page,
     browser,

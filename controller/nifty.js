@@ -87,18 +87,17 @@ export const niftyDerivatives = async (req, res) => {
   // try {
   // const { name } = req.body;
 
-  let { page, browser } = await browserInit(
+  const { page, browser } = browserInit(
     config.NSE_API_URL + "market-data/live-equity-market"
   );
 
-  await page.select("select#equitieStockSelect", "NIFTY 50");
+  // await page.select("select#equitieStockSelect", "NIFTY 50");
+  console.log(page);
 
   const niftyDerivative = await page.evaluate(() =>
-    document.querySelector(
-      ".tbl_leftcol_fix #tableLiveMarket-equity-stock table"
-    )
+    document.querySelector(".tbl_leftcol_fix")
   );
-  console.log(niftyDerivative);
+  // console.log(niftyDerivative);
 
   await browserStop(browser);
   // } catch (err) {}
