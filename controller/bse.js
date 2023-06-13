@@ -1,31 +1,17 @@
 import config from "../config.js";
 import { browserInit, browserStop } from "../utils/browser.js";
 
-let nifties = [
-  "nifty-50",
-  "nifty-bank",
-  "nifty-fin-service",
-  "nifty-auto",
-  "nifty-energy",
-  "nifty-fmcg",
-  "nifty-it",
-  "nifty-metal",
-  "nifty-media",
-  "nifty-pharma",
-  "nifty-reality",
-  "nifty-oil-and-gas",
-  "nifty-healthcare",
-];
+let bses = ["sensex", "bse100"];
 
-export const getNiftySector = async (req, res) => {
+export const getBSESector = async (req, res) => {
   let success = false;
   try {
-    const { name } = req.body;
+    const { name } = req.params;
 
     let { page, browser } = await browserInit(
       config.UPSTOX_API_URL + `indices/${name}-share-price/#overview`
     );
-    const niftySector = await page.evaluate(() => {
+    const bseSector = await page.evaluate(() => {
       // main
       let container = document.querySelector(".left-sec .stock-info");
       let name = container.querySelector(
@@ -53,15 +39,17 @@ export const getNiftySector = async (req, res) => {
         name,
         price,
         percentage,
-        open,
-        close,
-        day_range,
-        year_range,
+        overview: {
+          open,
+          close,
+          day_range,
+          year_range,
+        },
       };
     });
     await browserStop(browser);
 
-    if (niftySector.length === 0) {
+    if (bseSector.length === 0) {
       return res.status(404).send({
         success,
         message: "No Sector Found",
@@ -72,7 +60,7 @@ export const getNiftySector = async (req, res) => {
 
     return res.status(200).send({
       success,
-      data: niftySector,
+      data: bseSector,
     });
   } catch (err) {
     return res.status(500).send({
@@ -82,17 +70,16 @@ export const getNiftySector = async (req, res) => {
   }
 };
 
-export const niftyDerivatives = async (req, res) => {
+export const getBSEDerivatives = async (req, res) => {
   let success = false;
   try {
-  const { name } = req.body;
+    const { name } = req.params;
 
-  const niftyDerivatives = async (req, res) => {
     let { page, browser } = await browserInit(
-      config.UPSTOX_API_URL + `indices/nifty-50-share-price/#overview`
+      config.UPSTOX_API_URL + `indices/${name}-share-price/#overview`
     );
-  
-    const nifty = await page.evaluate(() =>
+
+    const bse = await page.evaluate(() =>
       Array.from(
         document.querySelectorAll("#table-data-indices .stock-filter-data")
       ).map((el) => {
@@ -105,15 +92,82 @@ export const niftyDerivatives = async (req, res) => {
             .innerText,
           open_price: el.querySelector(".data-col-3").innerText,
           close_price: el.querySelector(".data-col-4").innerText,
-          endpoint: el.querySelector(".data-col-1 .company-name span a").getAttribute("href")
+          endpoint: el
+            .querySelector(".data-col-1 .company-name span a")
+            .getAttribute("href"),
         };
       })
     );
-  
+
     await browserStop(browser);
-  };
-  
-  } catch (err) {}
+
+    if (bse.length === 0) {
+      return res.status(404).send({
+        success,
+        message: "No Sector Found",
+      });
+    }
+
+    success = true;
+
+    return res.status(200).send({
+      success,
+      data: bse,
+      length: bse.length,
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success,
+      message: "Internal Server Error",
+    });
+  }
 };
 
-niftyDerivatives();
+export const getBSEStockDetails = async (req, res) => {
+  //   let success = false;
+  //   try {
+  let { page, browser } = await browserInit(
+    config.UPSTOX_API_URL +
+      `stocks/adani-enterprises-limited-share-price/INE423A01024/`
+  );
+
+  await page.click("#overview .stock-card-header #company-profile-desc .show-more-description");
+
+  const stockOverview = await page.evaluate(() => {
+    let titleOverview = document.querySelector(
+      "#overview .stock-card-header .stock-overview-desc h2"
+    ).innerText;
+
+    let overview = document.querySelector(
+      "#overview .stock-card-header #company-profile-desc"
+    ).innerText;
+
+    return {
+      title: titleOverview,
+      overview,
+    };
+  });
+
+  const stockPerformance = await page.evaluate(() =>
+    Array.from(document.querySelectorAll("#performance li")).map((el) => {
+      return {
+        summary_title: el.querySelector(".summary-title").innerText,
+        summary_price: el.querySelector(".summary-amount").innerText,
+      };
+    })
+  );
+
+  console.log(stockOverview);
+  console.log(stockPerformance);
+
+  await browserStop(browser);
+  //   } catch (err) {}
+};
+
+getBSEStockDetails();
+
+export default {
+  getBSESector,
+  getBSEDerivatives,
+  getBSEStockDetails,
+};

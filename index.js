@@ -1,9 +1,14 @@
 import express from "express";
-import { browserInit, browserStop } from "./utils/browser.js";
-import config from "./config.js";
+import cors from "cors";
+import exchangeRoute from "./routes/exchange.js";
+import stockRoute from "./routes/stock.js";
+import mutualFundRoute from "./routes/mutual-fund.js";
 
 const app = express();
 const port = 8080;
+
+app.use(express.json());
+app.use(cors());
 
 app.get("/", (req, res) => {
   res.send({
@@ -11,6 +16,9 @@ app.get("/", (req, res) => {
   });
 });
 
+app.use("/api/exchange", exchangeRoute);
+app.use("/api/stock", stockRoute);
+app.use("/api/mutual-fund", mutualFundRoute);
 
 app.listen(port, () => {
   console.log(`Connected to http://localhost:${port}`);
@@ -22,4 +30,3 @@ app.listen(port, () => {
 // Investment Calculator
 // Individual Stock
 // Search Stock
-
