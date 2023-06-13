@@ -83,24 +83,36 @@ export const getNiftySector = async (req, res) => {
 };
 
 export const niftyDerivatives = async (req, res) => {
-  // let success = false;
-  // try {
-  // const { name } = req.body;
+  let success = false;
+  try {
+  const { name } = req.body;
 
-  const { page, browser } = browserInit(
-    config.NSE_API_URL + "market-data/live-equity-market"
-  );
-
-  // await page.select("select#equitieStockSelect", "NIFTY 50");
-  console.log(page);
-
-  const niftyDerivative = await page.evaluate(() =>
-    document.querySelector(".tbl_leftcol_fix")
-  );
-  // console.log(niftyDerivative);
-
-  await browserStop(browser);
-  // } catch (err) {}
+  const niftyDerivatives = async (req, res) => {
+    let { page, browser } = await browserInit(
+      config.UPSTOX_API_URL + `indices/nifty-50-share-price/#overview`
+    );
+  
+    const nifty = await page.evaluate(() =>
+      Array.from(
+        document.querySelectorAll("#table-data-indices .stock-filter-data")
+      ).map((el) => {
+        return {
+          image: el.querySelector(".data-col-1 .company-info figure img").src,
+          name: el.querySelector(".data-col-1 .company-name span a").innerText,
+          curr_price: el.querySelector(".data-col-2 .price-details .price")
+            .innerText,
+          change: el.querySelector(".stat-desktop .price-details .percentage")
+            .innerText,
+          open_price: el.querySelector(".data-col-3").innerText,
+          close_price: el.querySelector(".data-col-4").innerText,
+        };
+      })
+    );
+  
+    await browserStop(browser);
+  };
+  
+  } catch (err) {}
 };
 
 niftyDerivatives();
