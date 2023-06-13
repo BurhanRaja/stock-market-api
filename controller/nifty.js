@@ -105,6 +105,7 @@ export const niftyDerivatives = async (req, res) => {
             .innerText,
           open_price: el.querySelector(".data-col-3").innerText,
           close_price: el.querySelector(".data-col-4").innerText,
+          endpoint: el.querySelector(".data-col-1 .company-name span a").getAttribute("href")
         };
       })
     );

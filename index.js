@@ -18,4 +18,8 @@ app.listen(port, () => {
 
 // Plan
 
-// Nifty 50 All Data from
+// Upcoming IPO
+// Investment Calculator
+// Individual Stock
+// Search Stock
+
