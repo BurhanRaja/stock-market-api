@@ -16,13 +16,10 @@ app.get("/", (req, res) => {
   });
 });
 
-<<<<<<< HEAD
-=======
 app.use("/api/exchange", exchangeRoute);
 app.use("/api/stock", stockRoute);
 app.use("/api/mutual-fund", mutualFundRoute);
 
->>>>>>> 45520a3f18fdbc42c82256310da25e94a58cffc8
 app.listen(port, () => {
   console.log(`Connected to http://localhost:${port}`);
 });
@@ -32,8 +29,4 @@ app.listen(port, () => {
 // Upcoming IPO
 // Investment Calculator
 // Individual Stock
-<<<<<<< HEAD
 // Search Stock
-=======
-// Search Stock
->>>>>>> 45520a3f18fdbc42c82256310da25e94a58cffc8
