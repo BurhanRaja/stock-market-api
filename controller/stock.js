@@ -1,24 +1,22 @@
 import config from "../config.js";
 import { browserInit, browserStop } from "../utils/browser.js";
 
-// Stock Details
-export const getStockDetails = async (req, res) => {
+// Stock Overview
+const getStockOverview = async (req, res) => {
   let success = false;
   try {
     const { name, id } = req.params;
 
-    let { page, browser } = await browserInit(
+    const { page, browser } = await browserInit(
       config.UPSTOX_API_URL + `stocks/${name}/${id}/`
     );
 
-    await page.waitForSelector(
-      ".stock-info .stock-price-wrap #main-price-box .current-price"
+    let btn = await page.$eval(
+      "#overview .stock-card-header #company-profile-desc button",
+      (el) => el.click()
     );
 
     const stockOverview = await page.evaluate(async () => {
-      await page.click(
-        "#overview .stock-card-header #company-profile-desc .show-more-description"
-      );
       let shareName = document.querySelector(
         ".stock-info .stock-header .stock-name"
       ).innerText;
@@ -45,6 +43,33 @@ export const getStockDetails = async (req, res) => {
       };
     });
 
+    await browserStop(browser);
+    success = true;
+
+    // console.log(stockOverview);
+
+    return res.status(200).send({
+      success,
+      data: stockOverview,
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success,
+      message: err,
+    });
+  }
+};
+
+// Stock Performance
+const getStocPerformance = async (req, res) => {
+  let success = false;
+  try {
+    const { name, id } = req.params;
+
+    let { page, browser } = await browserInit(
+      config.UPSTOX_API_URL + `stocks/${name}/${id}/`
+    );
+
     const stockPerformance = await page.evaluate(() =>
       Array.from(document.querySelectorAll("#performance li")).map((el) => {
         return {
@@ -54,6 +79,30 @@ export const getStockDetails = async (req, res) => {
       })
     );
 
+    await browserStop(browser);
+    success = true;
+
+    return res.status(200).send({
+      success,
+      data: stockPerformance,
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success,
+      message: err,
+    });
+  }
+};
+
+// Stock Indicators
+const getStocIndicators = async (req, res) => {
+  let success = false;
+  try {
+    const { name, id } = req.params;
+
+    let { page, browser } = await browserInit(
+      config.UPSTOX_API_URL + `stocks/${name}/${id}/`
+    );
     const stockIndicators = await page.evaluate(() => {
       let container = document.querySelector(
         "#fundamentals .sec-col .stock-card"
@@ -67,11 +116,36 @@ export const getStockDetails = async (req, res) => {
       });
     });
 
+    await browserStop(browser);
+    success = true;
+
+    return res.status(200).send({
+      success,
+      data: stockIndicators,
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success,
+      message: err,
+    });
+  }
+};
+
+// Stock Ratios
+const getStockRatios = async (req, res) => {
+  let success = false;
+  try {
+    const { name, id } = req.params;
+
+    let { page, browser } = await browserInit(
+      config.UPSTOX_API_URL +
+        `stocks/adani-port-sez-ltd-share-price/INE742F01042/`
+    );
+
     let profitabilityRatios = await page.evaluate(() => {
       let cont = document.querySelector(
         "#financial-ratios-card .stock-card-content [data-tab-panel='1']"
       );
-
       return Array.from(cont.querySelectorAll("ul li")).map((el) => {
         return {
           title: el.querySelector(".accordion-header .summary-title").innerText,
@@ -106,6 +180,35 @@ export const getStockDetails = async (req, res) => {
         };
       });
     });
+    await browserStop(browser);
+    success = true;
+
+    return res.status(200).send({
+      success,
+      data: {
+        profitabilityRatios,
+        operationalRatios,
+        valuationRatios,
+      },
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success,
+      message: err,
+    });
+  }
+};
+
+// Stock Details
+const getStockShareHoldersReturn = async (req, res) => {
+  let success = false;
+  try {
+    const { name, id } = req.params;
+
+    let { page, browser } = await browserInit(
+      config.UPSTOX_API_URL +
+        `stocks/adani-port-sez-ltd-share-price/INE742F01042/`
+    );
 
     let shareholdersReturns = await page.evaluate(() => {
       let cont = Array.from(
@@ -127,20 +230,12 @@ export const getStockDetails = async (req, res) => {
 
     return res.status(200).send({
       success,
-      data: {
-        stockOverview,
-        stockIndicators,
-        stockPerformance,
-        profitabilityRatios,
-        operationalRatios,
-        valuationRatios,
-        shareholdersReturns,
-      },
+      data: shareholdersReturns,
     });
   } catch (err) {
     return res.status(500).send({
       success,
-      message: "Internal Server Error",
+      message: err,
     });
   }
 };
@@ -172,7 +267,7 @@ const getStockPrice = async (req, res) => {
     await browserStop(browser);
     success = true;
 
-    res.status(200).send({
+    return res.status(200).send({
       success,
       data: {
         ...sharePrice,
@@ -191,6 +286,10 @@ const getStockPrice = async (req, res) => {
 // stock/v2/get-recommendation from an API https://rapidapi.com/apidojo/api/yh-finance
 
 export default {
-  getStockDetails,
+  getStockOverview,
+  getStocPerformance,
+  getStocIndicators,
+  getStockRatios,
+  getStockShareHoldersReturn,
   getStockPrice,
 };
