@@ -11,7 +11,6 @@ app.get("/", (req, res) => {
   });
 });
 
-
 app.listen(port, () => {
   console.log(`Connected to http://localhost:${port}`);
 });
@@ -22,4 +21,3 @@ app.listen(port, () => {
 // Investment Calculator
 // Individual Stock
 // Search Stock
-
