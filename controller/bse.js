@@ -124,50 +124,193 @@ export const getBSEDerivatives = async (req, res) => {
 };
 
 export const getBSEStockDetails = async (req, res) => {
-  //   let success = false;
-  //   try {
-  let { page, browser } = await browserInit(
-    config.UPSTOX_API_URL +
-      `stocks/adani-enterprises-limited-share-price/INE423A01024/`
-  );
+  let success = false;
+  try {
+    let { page, browser } = await browserInit(
+      config.UPSTOX_API_URL +
+        `stocks/adani-enterprises-limited-share-price/INE423A01024/`
+    );
 
-  await page.click("#overview .stock-card-header #company-profile-desc .show-more-description");
+    await page.click(".stock-buy-sell .bse-nse-switch label");
 
-  const stockOverview = await page.evaluate(() => {
-    let titleOverview = document.querySelector(
-      "#overview .stock-card-header .stock-overview-desc h2"
-    ).innerText;
+    const stockOverview = await page.evaluate(async () => {
+      await page.click(
+        "#overview .stock-card-header #company-profile-desc .show-more-description"
+      );
+      let shareName = document.querySelector(
+        ".stock-info .stock-header .stock-name"
+      ).innerText;
+      let shareCode = document
+        .querySelector(".stock-info .stock-header #code")
+        .innerText.split(" ")[0];
+      let shareImg = document.querySelector(
+        ".stock-info .stock-header figure img"
+      ).src;
 
-    let overview = document.querySelector(
-      "#overview .stock-card-header #company-profile-desc"
-    ).innerText;
+      let titleOverview = document.querySelector(
+        "#overview .stock-card-header .stock-overview-desc h2"
+      ).innerText;
+      let overview = document.querySelector(
+        "#overview .stock-card-header #company-profile-desc"
+      ).innerText;
 
-    return {
-      title: titleOverview,
-      overview,
-    };
-  });
-
-  const stockPerformance = await page.evaluate(() =>
-    Array.from(document.querySelectorAll("#performance li")).map((el) => {
       return {
-        summary_title: el.querySelector(".summary-title").innerText,
-        summary_price: el.querySelector(".summary-amount").innerText,
+        shareName,
+        shareCode,
+        shareImg,
+        title: titleOverview,
+        overview,
       };
-    })
-  );
+    });
 
-  console.log(stockOverview);
-  console.log(stockPerformance);
+    const stockPerformance = await page.evaluate(() =>
+      Array.from(document.querySelectorAll("#performance li")).map((el) => {
+        return {
+          summary_title: el.querySelector(".summary-title").innerText,
+          summary_price: el.querySelector(".summary-amount").innerText,
+        };
+      })
+    );
 
-  await browserStop(browser);
-  //   } catch (err) {}
+    const stockIndicators = await page.evaluate(() => {
+      let container = document.querySelector(
+        "#fundamentals .sec-col .stock-card"
+      );
+
+      return Array.from(container.querySelectorAll("ul li")).map((el) => {
+        return {
+          summary_title: el.querySelector(".summary-title").innerText,
+          summary_price: el.querySelector(".summary-amount").innerText,
+        };
+      });
+    });
+
+    let profitabilityRatios = await page.evaluate(() => {
+      let cont = document.querySelector(
+        "#financial-ratios-card .stock-card-content [data-tab-panel='1']"
+      );
+
+      return Array.from(cont.querySelectorAll("ul li")).map((el) => {
+        return {
+          title: el.querySelector(".accordion-header .summary-title").innerText,
+          ratio: el.querySelector(".accordion-header .summary-amount")
+            .innerText,
+        };
+      });
+    });
+    let operationalRatios = await page.evaluate(() => {
+      let cont = document.querySelector(
+        "#financial-ratios-card .stock-card-content [data-tab-panel='2']"
+      );
+
+      return Array.from(cont.querySelectorAll("ul li")).map((el) => {
+        return {
+          title: el.querySelector(".accordion-header .summary-title").innerText,
+          ratio: el.querySelector(".accordion-header .summary-amount")
+            .innerText,
+        };
+      });
+    });
+    let valuationRatios = await page.evaluate(() => {
+      let cont = document.querySelector(
+        "#financial-ratios-card .stock-card-content [data-tab-panel='3']"
+      );
+
+      return Array.from(cont.querySelectorAll("ul li")).map((el) => {
+        return {
+          title: el.querySelector(".accordion-header .summary-title").innerText,
+          ratio: el.querySelector(".accordion-header .summary-amount")
+            .innerText,
+        };
+      });
+    });
+
+    let shareholdersReturns = await page.evaluate(() => {
+      let cont = Array.from(
+        document.querySelectorAll("#fundamentals .sec-col .stock-card")
+      )[3];
+      return Array.from(cont.querySelectorAll(".stock-card-content ul li")).map(
+        (el) => {
+          return {
+            title: el.querySelector(".summary-title").innerText,
+            percentage: el.querySelector(".summary-amount span").innerText,
+          };
+        }
+      );
+    });
+
+    await browserStop(browser);
+
+    success = true;
+
+    return res.status(200).send({
+      success,
+      data: {
+        stockOverview,
+        stockIndicators,
+        stockPerformance,
+        profitabilityRatios,
+        operationalRatios,
+        valuationRatios,
+        shareholdersReturns,
+      },
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success,
+      message: "Internal Server Error",
+    });
+  }
 };
 
-getBSEStockDetails();
+const getBSEStockPrice = async (req, res) => {
+  let success = false;
+  try {
+    let { page, browser } = await browserInit(
+      config.UPSTOX_API_URL +
+        `stocks/adani-enterprises-limited-share-price/INE423A01024/`
+    );
+
+    await page.waitForSelector(".stock-buy-sell .bse-nse-switch label");
+    await page.click(".stock-buy-sell .bse-nse-switch label");
+
+    let sharePrice = await page.evaluate(() => {
+      let price = document.querySelector(
+        ".stock-info .stock-price-wrap #main-price-box .pricing"
+      ).innerText;
+      let percentage = document.querySelectorAll(
+        ".stock-info .stock-price-wrap #main-price-box div"
+      )[1].innerText;
+
+      return {
+        price,
+        percentage,
+      };
+    });
+
+    console.log(sharePrice);
+    await browserStop(browser);
+    success = true;
+
+    // res.status(200).send({
+    //   success,
+    //   data: {
+    //     ...sharePrice,
+    //   },
+    // });
+  } catch (err) {
+    // return res.status(500).send({
+    //   success,
+    //   message: "Internal Server Error",
+    // });
+  }
+};
+
+getBSEStockPrice();
 
 export default {
   getBSESector,
   getBSEDerivatives,
   getBSEStockDetails,
+  getBSEStockPrice,
 };
