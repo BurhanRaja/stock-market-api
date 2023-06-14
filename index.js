@@ -1,5 +1,5 @@
 import express from "express";
-import cors from "cors";
+// import cors from "cors";
 import exchangeRoute from "./routes/exchange.js";
 import stockRoute from "./routes/stock.js";
 import mutualFundRoute from "./routes/mutual-fund.js";
@@ -8,7 +8,7 @@ const app = express();
 const port = 8080;
 
 app.use(express.json());
-app.use(cors());
+// app.use(cors());
 
 app.get("/", (req, res) => {
   res.send({
